@@ -1,0 +1,16 @@
+# Node dependencies
+node_modules/
+npm-debug.log
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Uploaded images from the ESP32
+backend/uploads/
+*_processed.jpg
+
+# Environment variables (if you add any later)
+.env
+.DS_Store

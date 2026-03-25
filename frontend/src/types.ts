@@ -26,7 +26,7 @@ export interface sensorData {
 
 export interface Payload {
   devId: string;
-  imageb64: string | null;
+  imageUrl: string | null;
   location: string;
   growthStage: stageName;
   confidence: number;
@@ -42,7 +42,7 @@ export interface historyPoint {
 }
 
 export interface receivedImage {
-  b64: string;
+  url: string;
   ts: string;
   stage: stageName;
   confidence: number;
@@ -50,6 +50,7 @@ export interface receivedImage {
 
 export const STAGES: stageName[] = [
   "undetected",
+  "nonFlowering",
   "flower",
   "green",
   "turningRed",

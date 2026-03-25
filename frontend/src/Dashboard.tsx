@@ -2,13 +2,12 @@ import React, { useState, useEffect } from "react";
 import "./Dashboard.css";
 import { espAddr, type Payload, type historyPoint, type receivedImage } from "./types";
 import { LeftPanel } from "./components/LeftPanel";
-// import { MiddlePanel } from "./components/MidPanel"; // Commented out per your layout
+// import { MiddlePanel } from "./components/MidPanel"; //
 import { RightPanel } from "./components/RightPanel";
-import { ImageModal } from "./components/ImageModal";
 
 const tempPayload: Payload = {
   devId: "Waiting...",
-  imageb64: null,
+  imageUrl: null,
   location: "-",
   growthStage: "undetected",
   confidence: 0,
@@ -23,11 +22,9 @@ const tempPayload: Payload = {
 };
 
 export default function Dashboard() {
-  const [override, setOverride] = useState<boolean | null>(null);
   const [history, setHistory] = useState<historyPoint[]>([]);
   const [lastP, setLastP] = useState<Payload | null>(null);
   const [receivedImg, setReceivedImg] = useState<receivedImage | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [clock, setClock] = useState("--:--:--");
   const [statusLabel, setStatusLabel] = useState("CONNECTING...");
 
@@ -56,7 +53,6 @@ export default function Dashboard() {
       setStatusLabel("LIVE");
       setLastP(p);
 
-      // Update History
       setHistory((prev) => {
         const newPoint = {
           m: p.sensorData.soilMoisture,
@@ -67,13 +63,11 @@ export default function Dashboard() {
       });
 
       // IMAGE UPDATE LOGIC
-      // We check if the image exists and if it's different from what we currently have
-      if (p.imageb64) {
+      if (p.imageUrl) {
         setReceivedImg((current) => {
-          // Only update state if the image string has actually changed
-          if (!current || p.imageb64 !== current.b64) {
+          if (!current || p.imageUrl !== current.url) {
             return {
-              b64: p.imageb64 as string,
+              url: p.imageUrl as string,
               ts: p.sensorData.timestamp || new Date().toLocaleTimeString(),
               stage: p.growthStage,
               confidence: p.confidence,
@@ -87,26 +81,21 @@ export default function Dashboard() {
     tick();
     const id = setInterval(tick, 3000);
 
-    // CLEANUP: Clear the interval when component unmounts
     return () => clearInterval(id);
-
-    // REMOVED receivedImg from here to prevent infinite loop/re-renders
   }, []);
 
   const displayPayload = lastP || tempPayload;
 
   return (
     <div className="dash-root">
-      {/* HEADER */}
       <div className="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
         <div>
           <h1
             className="display-font mb-0"
             style={{ fontSize: "30px", color: "var(--accent)", lineHeight: 1.1 }}
           >
-            🍓 Strawberry Growth Stage Monitor
+            🍓 Strawberry Growth Stage Monitor 🍓
           </h1>
-          <p className="text-muted mb-0">{displayPayload.location}</p>
         </div>
         <div className="d-flex align-items-center gap-2 flex-wrap">
           <div className="hpill">
@@ -123,28 +112,18 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* DASHBOARD GRID */}
       <div className="row">
         <div className="col-lg-8 d-flex flex-column gap-3">
           <LeftPanel
             payload={displayPayload}
             receivedImage={receivedImg}
             sensorData={displayPayload.sensorData}
-            override={override}
-            setOverride={setOverride}
-            setIsModalOpen={setIsModalOpen}
           />
         </div>
         <div className="col-lg-4 d-flex flex-column gap-3">
           <RightPanel history={history} />
         </div>
       </div>
-
-      <ImageModal
-        receivedImage={receivedImg}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
     </div>
   );
 }

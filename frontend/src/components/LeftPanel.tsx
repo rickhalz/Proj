@@ -5,9 +5,6 @@ interface LeftPanelProps {
   payload: Payload;
   receivedImage: receivedImage | null;
   sensorData: sensorData;
-  override: boolean | null;
-  setOverride: (val: boolean | null) => void;
-  setIsModalOpen: (val: boolean) => void;
 }
 
 const Gauge = ({
@@ -60,50 +57,14 @@ const Gauge = ({
   );
 };
 
-export const LeftPanel: React.FC<LeftPanelProps> = ({
-  payload,
-  receivedImage,
-  sensorData,
-  override,
-  setOverride,
-  setIsModalOpen,
-}) => {
-  const getImageSrc = (b64: string) => {
-    if (b64.startsWith("data:image")) return b64;
-    return `data:image/jpeg;base64,${b64}`;
-  };
+export const LeftPanel: React.FC<LeftPanelProps> = ({ payload, receivedImage, sensorData }) => {
   return (
     <>
       <div className="cardSoil">
         <div className="secLabel">Detected Stage Image</div>
-        <div
-          className={`imgCard ${receivedImage ? "hasImg" : ""}`}
-          onClick={() => {
-            if (receivedImage) {
-              setIsModalOpen(true);
-            }
-          }}
-        >
+        <div className={`img-card ${receivedImage ? "has-img" : ""}`}>
           {receivedImage ? (
-            <>
-              <img src={getImageSrc(receivedImage.b64)} alt="Detected" />
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: "10px",
-                  right: "12px",
-                  background: "rgba(44,31,14,.7)",
-                  color: "#fff",
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  padding: "3px 9px",
-                  borderRadius: "20px",
-                  letterSpacing: ".5px",
-                }}
-              >
-                CLICK TO EXPAND
-              </div>
-            </>
+            <img src={receivedImage.url} alt="Detected" />
           ) : (
             <div className="noImg">
               <div style={{ fontSize: "38px", marginBottom: "8px" }}>None</div>
@@ -116,11 +77,11 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
             </div>
           )}
         </div>
-        <div className="d-flex align-items-center justify-content-between mt-3 flex-wrap gap-2">
+        <div className="d-flex align-items-center justify-content-evenly mt-3 flex-wrap gap-2">
           <div>
-            <div style={{ fontSize: "11px", color: "var(--text3)" }}>Confidence</div>
-            <div className="mono display-font" style={{ fontSize: "22px", color: "var(--accent)" }}>
-              {payload.confidence}%
+            <div style={{ fontSize: "11px", color: "var(--text3)" }}>Stage</div>
+            <div className="mono display-font" style={{ fontSize: "22px", color: "var(--text2)" }}>
+              {payload.growthStage}
             </div>
           </div>
           <div>
@@ -135,13 +96,6 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
               {receivedImage ? new Date(receivedImage.ts).toLocaleTimeString() : "--"}
             </div>
           </div>
-          <button
-            className="btn-ghost"
-            onClick={() => setIsModalOpen(true)}
-            disabled={!receivedImage}
-          >
-            View Full
-          </button>
         </div>
       </div>
 
@@ -153,13 +107,11 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
             const ci = visualStages.indexOf(payload.growthStage);
             const sm = SM[stg];
 
-            // This ensures no stage lights up until actual growth is detected.
             const active = i === ci;
-            const done = ci !== -1 && i < ci;
 
-            const nb = active ? sm.color : done ? sm.color + "99" : "var(--bg2)";
-            const nc = active || done ? "#fff" : "var(--text3)";
-            const nd = active ? sm.color : done ? sm.color + "66" : "var(--border)";
+            const nb = active ? sm.color : "var(--bg2)";
+            const nc = active ? "#fff" : "var(--text3)";
+            const nd = active ? sm.color : "var(--border)";
 
             return (
               <div key={stg} className="tl-item">
@@ -174,10 +126,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
                 >
                   {sm.icon}
                 </div>
-                <div
-                  className="tl-lbl"
-                  style={{ color: active ? sm.color : done ? sm.color + "aa" : "var(--text3)" }}
-                >
+                <div className="tl-lbl" style={{ color: active ? sm.color : "var(--text3)" }}>
                   {sm.label}
                 </div>
               </div>

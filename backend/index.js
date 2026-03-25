@@ -8,16 +8,31 @@ const path = require('path');
 const app = express();
 app.use(cors());
 
-// 1. Tell Multer to physically save incoming files to the "uploads" folder
-const upload = multer({ dest: 'uploads/' });
+// 1. Force the paths to stay inside test/backend/
+const BACKEND_DIR = __dirname;
+const UPLOADS_DIR = path.join(BACKEND_DIR, 'uploads');
+
+// Ensure the uploads directory exists before multer tries to use it
+if (!fs.existsSync(UPLOADS_DIR)) {
+   fs.mkdirSync(UPLOADS_DIR);
+}
+
+// Serve the static folder securely
+app.use('/uploads', express.static(UPLOADS_DIR));
+
+// Configure multer with the absolute path
+const upload = multer({ dest: UPLOADS_DIR });
 
 let latestESP32Data = null;
+let lastProcessedImage = null;
 
 app.post('/api/upload', upload.single('imageFile'), (req, res) => {
-   const originalPath = req.file.path;
+   const originalPath = req.file.path; // Multer will use the absolute UPLOADS_DIR path
 
-   // 1. Run Python
-   exec(`python inference.py "${originalPath}"`, (error, stdout, stderr) => {
+   // 2. Force the execution to look for inference.py exactly where index.js is
+   const pythonScript = path.join(BACKEND_DIR, 'inference.py');
+
+   exec(`python "${pythonScript}" "${originalPath}"`, (error, stdout, stderr) => {
       if (error) {
          console.error("AI Error:", stderr);
          if (fs.existsSync(originalPath)) fs.unlinkSync(originalPath);
@@ -25,29 +40,27 @@ app.post('/api/upload', upload.single('imageFile'), (req, res) => {
       }
 
       try {
-         const aiResults = JSON.parse(stdout.trim());
-         const payload = JSON.parse(req.body.jsonData);
+         const jsonString = stdout.substring(stdout.indexOf('{'), stdout.lastIndexOf('}') + 1);
+         const aiResults = JSON.parse(jsonString || stdout.trim());
+         const payload = req.body.jsonData ? JSON.parse(req.body.jsonData) : {};
 
-         // 2. IMPORTANT: Read the PROCESSED image, not the original
          if (aiResults.processed_image && fs.existsSync(aiResults.processed_image)) {
-            const processedBuffer = fs.readFileSync(aiResults.processed_image);
+            // 3. Extract just the filename to attach to our localhost URL
+            const fileName = path.basename(aiResults.processed_image);
+            payload.imageUrl = `http://localhost:3001/uploads/${fileName}`;
 
-            // Convert the marked-up image to Base64 for React
-            payload.imageb64 = `data:image/jpeg;base64,${processedBuffer.toString('base64')}`;
-
-            // Clean up the processed file
-            fs.unlinkSync(aiResults.processed_image);
+            // Clean up old images
+            if (lastProcessedImage && fs.existsSync(lastProcessedImage) && lastProcessedImage !== aiResults.processed_image) {
+               fs.unlinkSync(lastProcessedImage);
+            }
+            lastProcessedImage = aiResults.processed_image;
          }
 
-         // 3. Clean up the original upload
          if (fs.existsSync(originalPath)) fs.unlinkSync(originalPath);
 
-         // Update data for React
          payload.growthStage = aiResults.stage;
          payload.confidence = aiResults.confidence;
          latestESP32Data = payload;
-
-         console.log(`Success: Displaying processed image for ${payload.growthStage}`);
          res.status(200).send("Processed image sent to dashboard");
 
       } catch (e) {
@@ -60,6 +73,7 @@ app.post('/api/upload', upload.single('imageFile'), (req, res) => {
 app.get('/api/data', (req, res) => {
    if (latestESP32Data) {
       res.json(latestESP32Data);
+      console.log(latestESP32Data);
    } else {
       res.status(404).send("No data yet");
    }

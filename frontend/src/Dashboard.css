@@ -40,7 +40,8 @@ body {
 }
 
 .display-font {
-   font-family: 'Playfair Display', serif;
+   font-family: 'Cormorant Garamond', serif;
+   font-style: italic;
 }
 
 .mono {
@@ -330,7 +331,6 @@ body {
    justify-content: center;
    min-height: 150px;
    gap: 10px;
-   cursor: pointer;
    transition: all .25s;
    position: relative;
    overflow: hidden;
@@ -345,13 +345,16 @@ body {
 .img-card.has-img {
    border-style: solid;
    border-color: var(--border2);
+   padding: 0;
+   width: fit-content;
+   margin: 0 auto;
 }
 
 .img-card img {
-   width: 100%;
+   max-width: 100%;
    border-radius: 9px;
-   object-fit: cover;
-   max-height: 170px;
+   object-fit: contain;
+   max-height: 350px;
    display: block;
 }
 
@@ -396,18 +399,6 @@ body {
    animation: warn-pulse 2.5s ease infinite;
 }
 
-/* Modal */
-.modal-bg {
-   position: fixed;
-   inset: 0;
-   background: rgba(44, 31, 14, .72);
-   z-index: 1000;
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   backdrop-filter: blur(5px);
-}
-
 @keyframes fadeIn {
    from {
       opacity: 0;
@@ -416,39 +407,6 @@ body {
    to {
       opacity: 1;
    }
-}
-
-@keyframes slideUp {
-   from {
-      transform: translateY(22px);
-      opacity: 0;
-   }
-
-   to {
-      transform: translateY(0);
-      opacity: 1;
-   }
-}
-
-.modal-bg {
-   animation: fadeIn .2s ease;
-}
-
-.modal-box {
-   background: var(--surface);
-   border-radius: 22px;
-   border: 2px solid var(--border);
-   padding: 26px;
-   max-width: 580px;
-   width: 90%;
-   box-shadow: 0 24px 70px var(--sh2);
-   animation: slideUp .25s cubic-bezier(.4, 0, .2, 1);
-}
-
-.modal-box img {
-   width: 100%;
-   border-radius: 14px;
-   border: 1.5px solid var(--border);
 }
 
 /* Stat pills */

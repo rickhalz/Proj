@@ -34,7 +34,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({ receivedImage, isOpen, o
             ✕ Close
           </button>
         </div>
-        <img src={`data:image/jpeg;base64,${receivedImage.b64}`} alt="detected stage" />
+        <img src={receivedImage.url} alt="detected stage" />
         <div
           className="d-flex justify-content-between mt-3 flex-wrap gap-2"
           style={{ fontSize: "12px", color: "var(--text3)" }}
